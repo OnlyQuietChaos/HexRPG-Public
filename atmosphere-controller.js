@@ -8,56 +8,42 @@
     spring: {
       name: "Spring",
       icon: "🌱",
-      type: "petal",
-      interval: 3000
+      effects: ["petal"]
     },
     summer: {
       name: "Summer",
       icon: "☀️",
-      type: "firefly",
-      interval: 2300
+      effects: ["firefly"]
     },
     autumn: {
       name: "Autumn",
       icon: "🍂",
-      type: "leaf",
-      interval: 3200
+      effects: ["leaf"]
     },
     winter: {
       name: "Winter",
       icon: "❄️",
-      type: "snow",
-      interval: 2500
+      effects: ["snow"]
     },
     monsoon: {
       name: "Monsoon",
       icon: "🌧️",
-      type: "rain",
-      interval: 1800
-    },
-    blossom: {
-      name: "Cherry Blossom",
-      icon: "🌸",
-      type: "blossom",
-      interval: 3200
+      effects: ["rain"]
     },
     spooky: {
       name: "Spooky",
       icon: "👻",
-      type: "spooky",
-      interval: 1800
+      effects: ["wisps", "haunted"]
     },
     festive: {
       name: "Festive",
       icon: "✨",
-      type: "festive",
-      interval: 2200
+      effects: ["candle", "goldenSnow"]
     },
     off: {
       name: "Off",
       icon: "○",
-      type: "off",
-      interval: 0
+      effects: []
     }
   };
 
@@ -82,6 +68,7 @@
 
   const style = document.createElement("style");
   style.id = "hex-atmosphere-controller";
+
   style.textContent = `
     #hex-atmo-overlay {
       position: fixed;
@@ -110,11 +97,13 @@
         transform: translate(0, -20px) rotate(0deg);
         opacity: 0;
       }
-      12% { opacity: .7; }
-      50% { transform: translate(35px, 50vh) rotate(170deg); }
-      90% { opacity: .65; }
+      12% { opacity: .65; }
+      50% {
+        transform: translate(25px, 50vh) rotate(170deg);
+      }
+      90% { opacity: .5; }
       100% {
-        transform: translate(-20px, 110vh) rotate(340deg);
+        transform: translate(-15px, 110vh) rotate(340deg);
         opacity: 0;
       }
     }
@@ -124,27 +113,56 @@
         transform: translate(0, 0);
         opacity: 0;
       }
-      20% { opacity: .75; }
-      50% { transform: translate(25px, -35px); }
-      75% { opacity: .35; }
+      20% { opacity: .7; }
+      50% {
+        transform: translate(20px, -35px);
+        opacity: .5;
+      }
       100% {
-        transform: translate(-15px, -75px);
+        transform: translate(-12px, -75px);
         opacity: 0;
       }
     }
 
     @keyframes hexAtmoRain {
       0% { transform: translateY(-20px); opacity: 0; }
-      15% { opacity: .6; }
-      90% { opacity: .45; }
+      15% { opacity: .5; }
+      90% { opacity: .4; }
       100% { transform: translateY(110vh); opacity: 0; }
     }
 
+    @keyframes hexAtmoWisp {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0;
+      }
+      15% { opacity: .7; }
+      50% { transform: translate(20px, -45px); opacity: .5; }
+      100% {
+        transform: translate(-12px, -100px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes hexAtmoHaunted {
+      0% { transform: translate(0,0); opacity: 0; }
+      20% { opacity: .7; }
+      50% { transform: translate(18px,-15px); opacity: .4; }
+      75% { transform: translate(-12px,-30px); opacity: .7; }
+      100% { transform: translate(10px,-45px); opacity: 0; }
+    }
+
+    @keyframes hexAtmoCandle {
+      0% { opacity: .2; transform: scale(.7); }
+      50% { opacity: .7; transform: scale(1.15); }
+      100% { opacity: .3; transform: scale(.85); }
+    }
+
     @keyframes hexAtmoTwinkle {
-      0% { transform: scale(.3) rotate(0deg); opacity: 0; }
-      40% { transform: scale(1) rotate(90deg); opacity: .8; }
-      70% { transform: scale(.7) rotate(180deg); opacity: .45; }
-      100% { transform: scale(.3) rotate(270deg); opacity: 0; }
+      0% { opacity: 0; transform: scale(.4); }
+      30% { opacity: .7; transform: scale(1); }
+      65% { opacity: .35; transform: scale(.75); }
+      100% { opacity: 0; transform: scale(.4); }
     }
 
     #hex-atmo-button {
@@ -166,7 +184,6 @@
       box-shadow: 0 3px 16px rgba(0,0,0,.3);
       touch-action: none;
       user-select: none;
-      transition: background .25s, box-shadow .25s;
     }
 
     #hex-atmo-button:hover {
@@ -257,13 +274,6 @@
       padding: 0 3px;
     }
 
-    #hex-atmo-panel .atmo-note {
-      font-size: 10px;
-      color: #9eacc0;
-      margin-top: 12px;
-      line-height: 1.5;
-    }
-
     @media (max-width: 480px) {
       #hex-atmo-button {
         width: 42px;
@@ -287,30 +297,25 @@
   button.type = "button";
   button.textContent = "☾";
   button.setAttribute("aria-label", "Atmosphere settings");
-  button.title = "Drag to move. Click for atmosphere settings.";
+  button.title = "Drag to move. Click for settings.";
   document.body.appendChild(button);
 
   const panel = document.createElement("div");
   panel.id = "hex-atmo-panel";
+
   panel.innerHTML = `
     <button class="atmo-close" type="button" aria-label="Close">×</button>
     <div class="atmo-heading">ATMOSPHERE</div>
-
     <div class="atmo-subheading">Choose a season</div>
     <div class="atmo-grid" id="hex-atmo-seasons"></div>
-
     <div class="atmo-subheading">Time of day</div>
     <div class="atmo-time">
       <button class="atmo-choice" data-mode="auto">Auto</button>
       <button class="atmo-choice" data-mode="day">☀️ Day</button>
       <button class="atmo-choice" data-mode="night">🌙 Night</button>
     </div>
-
-    <div class="atmo-note">
-      Your atmosphere settings are saved in this browser.
-      You can change them whenever you like.
-    </div>
   `;
+
   document.body.appendChild(panel);
 
   const seasonGrid = panel.querySelector("#hex-atmo-seasons");
@@ -365,98 +370,173 @@
     updateAppearance();
   }
 
-  let effectInterval = null;
+  const intervals = [];
 
   function clearEffects() {
-    if (effectInterval) {
-      clearInterval(effectInterval);
-      effectInterval = null;
-    }
-
+    intervals.forEach(id => clearInterval(id));
+    intervals.length = 0;
     effects.innerHTML = "";
   }
 
-  function createParticle(type) {
+  const palettes = {
+    petal: ["#f6c5d0", "#edb4c3", "#f8dce3", "#e9a6b8"],
+    firefly: ["#fff4a8", "#f7e58a", "#d7ed9b"],
+    leaf: ["#b96d35", "#d49a45", "#a85b32"],
+    snow: ["#ffffff", "#e8f3ff", "#d7e8f7"],
+    rain: ["#cde6f5", "#e8f5ff"],
+    blossom: ["#f4b9ca", "#f8d5df"],
+    wisps: ["#c5a5ff"],
+    haunted: ["#c7a5ff"],
+    candle: ["#ffdc91"],
+    goldenSnow: ["#e8c77e"]
+  };
+
+  function makeParticle(type) {
     const particle = document.createElement("div");
     particle.className = "hex-atmo-particle";
 
-    const colors = {
-      petal: ["#f6c5d0", "#edb4c3", "#f8dce3"],
-      leaf: ["#b96d35", "#d49a45", "#a85b32"],
-      blossom: ["#f4b9ca", "#f8d5df", "#eaa6bb"],
-      snow: ["#ffffff", "#e8f3ff", "#d7e8f7"],
-      firefly: ["#fff4a8", "#f7e58a", "#d7ed9b"],
-      rain: ["#cde6f5", "#e8f5ff"],
-      spooky: ["#c9a5f5", "#aa91e8", "#e0c7ff"],
-      festive: ["#f5d58c", "#fff0b5", "#e6b96a"]
-    };
-
-    const palette = colors[type] || colors.snow;
+    const palette = palettes[type];
     const color = palette[Math.floor(Math.random() * palette.length)];
 
     particle.style.left = Math.random() * 100 + "vw";
     particle.style.color = color;
 
-    let duration;
-    let animation;
+    let duration = 24 + Math.random() * 14;
+    let animation = "hexAtmoFall";
 
-    if (["petal", "leaf", "blossom", "snow"].includes(type)) {
-      duration = 24 + Math.random() * 14;
-      animation = "hexAtmoFall";
+    if (["petal", "leaf"].includes(type)) {
       particle.style.top = "-15px";
+      particle.style.width = "5px";
+      particle.style.height = "7px";
       particle.style.background = color;
-      particle.style.width = type === "snow" ? "2px" : "5px";
-      particle.style.height = type === "snow" ? "2px" : "7px";
-      particle.style.borderRadius = type === "snow"
-        ? "50%"
-        : "80% 10% 80% 10%";
-      particle.style.boxShadow = type === "snow"
-        ? "0 0 3px rgba(220,240,255,.5)"
-        : "none";
-    } else if (type === "rain") {
-      duration = 9 + Math.random() * 5;
-      animation = "hexAtmoRain";
+      particle.style.borderRadius = "80% 10% 80% 10%";
+    }
+
+    if (type === "snow" || type === "goldenSnow") {
+      particle.style.top = "-15px";
+      particle.style.width = "3px";
+      particle.style.height = "3px";
+      particle.style.borderRadius = "50%";
+      particle.style.background = color;
+      particle.style.boxShadow = "0 0 4px " + color;
+      duration = 25 + Math.random() * 15;
+    }
+
+    if (type === "rain") {
       particle.style.top = "-15px";
       particle.style.width = "1px";
-      particle.style.height = (6 + Math.random() * 4) + "px";
+      particle.style.height = "8px";
       particle.style.background = color;
-    } else if (type === "firefly") {
-      duration = 18 + Math.random() * 12;
-      animation = "hexAtmoDrift";
+      duration = 9 + Math.random() * 5;
+      animation = "hexAtmoRain";
+    }
+
+    if (type === "firefly") {
       particle.style.top = (Math.random() * 80 + 10) + "vh";
       particle.style.width = "3px";
       particle.style.height = "3px";
       particle.style.borderRadius = "50%";
       particle.style.background = color;
       particle.style.boxShadow = "0 0 6px 2px " + color;
-    } else {
-      duration = 4 + Math.random() * 2;
-      animation = "hexAtmoTwinkle";
-      particle.style.top = Math.random() * 90 + "vh";
-      particle.style.fontSize = "8px";
-      particle.textContent = type === "festive" ? "✦" : "✧";
+      duration = 18 + Math.random() * 12;
+      animation = "hexAtmoDrift";
     }
 
-    particle.style.animation = animation + " " + duration + "s ease-out forwards";
+    if (type === "wisps") {
+      particle.style.top = (45 + Math.random() * 50) + "vh";
+      particle.style.width = "3px";
+      particle.style.height = "3px";
+      particle.style.borderRadius = "50%";
+      particle.style.background = color;
+      particle.style.boxShadow = "0 0 7px 2px rgba(160,110,255,.45)";
+      duration = 18 + Math.random() * 12;
+      animation = "hexAtmoWisp";
+    }
+
+    if (type === "haunted") {
+      particle.style.top = Math.random() * 90 + "vh";
+      particle.style.width = "3px";
+      particle.style.height = "3px";
+      particle.style.borderRadius = "50%";
+      particle.style.background = color;
+      particle.style.boxShadow = "0 0 7px 2px rgba(174,135,255,.55)";
+      duration = 16 + Math.random() * 12;
+      animation = "hexAtmoHaunted";
+    }
+
+    if (type === "candle") {
+      particle.style.top = Math.random() * 95 + "vh";
+      particle.style.width = "3px";
+      particle.style.height = "3px";
+      particle.style.borderRadius = "50%";
+      particle.style.background = color;
+      particle.style.boxShadow = "0 0 7px 2px rgba(255,190,90,.45)";
+      duration = 3 + Math.random() * 4;
+      animation = "hexAtmoCandle";
+      particle.style.animationIterationCount = "infinite";
+    }
+
+    particle.style.animation = animation + " " + duration + "s ease-in-out forwards";
+
+    if (type === "candle") {
+      particle.style.animationIterationCount = "infinite";
+    }
 
     effects.appendChild(particle);
-    particle.addEventListener("animationend", () => particle.remove());
+
+    if (type !== "candle") {
+      particle.addEventListener("animationend", () => particle.remove());
+    }
+  }
+
+  const effectSettings = {
+    petal: { interval: 3000, initial: 5 },
+    firefly: { interval: 2300, initial: 5 },
+    leaf: { interval: 3200, initial: 5 },
+    snow: { interval: 2500, initial: 5 },
+    rain: { interval: 1800, initial: 5 },
+    wisps: { interval: 3500, initial: 4 },
+    haunted: { interval: 3000, initial: 4 },
+    candle: { interval: 0, initial: 12 },
+    goldenSnow: { interval: 3500, initial: 5 }
+  };
+
+  function startOneEffect(type) {
+    const config = effectSettings[type];
+    if (!config) return;
+
+    for (let i = 0; i < config.initial; i++) {
+      setTimeout(() => {
+        if (settings.season !== "off" &&
+            seasons[settings.season].effects.includes(type)) {
+          if (effects.childElementCount < 18) makeParticle(type);
+        }
+      }, i * 1000);
+    }
+
+    if (config.interval > 0) {
+      const id = setInterval(() => {
+        if (effects.childElementCount < 18) makeParticle(type);
+      }, config.interval);
+
+      intervals.push(id);
+    } else if (type === "candle") {
+      makeParticle(type);
+      for (let i = 1; i < config.initial; i++) {
+        setTimeout(() => {
+          if (settings.season === "festive") makeParticle(type);
+        }, i * 250);
+      }
+    }
   }
 
   function startEffects() {
     clearEffects();
 
     const season = seasons[settings.season];
+    if (!season) return;
 
-    if (!season || season.type === "off") return;
-
-    const type = season.type;
-
-    effectInterval = setInterval(() => {
-      if (effects.childElementCount < 18) {
-        createParticle(type);
-      }
-    }, season.interval);
+    season.effects.forEach(startOneEffect);
   }
 
   function changeSeason(season) {
@@ -479,18 +559,29 @@
   function positionPanel() {
     const rect = button.getBoundingClientRect();
     const panelWidth = Math.min(245, window.innerWidth - 24);
-    const panelHeight = Math.min(panel.scrollHeight || 330, window.innerHeight * .8);
+
+    panel.style.maxHeight = Math.min(
+      window.innerHeight * .8,
+      500
+    ) + "px";
+
+    const panelHeight = panel.offsetHeight || 330;
 
     let left = rect.left - panelWidth - 12;
 
-    if (left < 12) {
-      left = rect.right + 12;
-    }
+    if (left < 12) left = rect.right + 12;
 
-    left = Math.max(12, Math.min(left, window.innerWidth - panelWidth - 12));
+    left = Math.max(
+      12,
+      Math.min(left, window.innerWidth - panelWidth - 12)
+    );
 
     let top = rect.top + rect.height / 2 - panelHeight / 2;
-    top = Math.max(12, Math.min(top, window.innerHeight - panelHeight - 12));
+
+    top = Math.max(
+      12,
+      Math.min(top, window.innerHeight - panelHeight - 12)
+    );
 
     panel.style.left = left + "px";
     panel.style.top = top + "px";
@@ -554,11 +645,15 @@
 
     if (!pointerStart.moved) return;
 
-    const maxLeft = window.innerWidth - button.offsetWidth;
-    const maxTop = window.innerHeight - button.offsetHeight;
+    const left = Math.max(
+      0,
+      Math.min(window.innerWidth - button.offsetWidth, pointerStart.left + dx)
+    );
 
-    const left = Math.max(0, Math.min(maxLeft, pointerStart.left + dx));
-    const top = Math.max(0, Math.min(maxTop, pointerStart.top + dy));
+    const top = Math.max(
+      0,
+      Math.min(window.innerHeight - button.offsetHeight, pointerStart.top + dy)
+    );
 
     button.style.left = left + "px";
     button.style.top = top + "px";
@@ -567,7 +662,7 @@
     settings.left = left;
     settings.top = top;
 
-    positionPanel();
+    if (panel.classList.contains("open")) positionPanel();
   });
 
   function finishDragging() {
@@ -585,7 +680,10 @@
   button.addEventListener("pointercancel", finishDragging);
 
   function restoreButtonPosition() {
-    if (Number.isFinite(settings.left) && Number.isFinite(settings.top)) {
+    if (
+      Number.isFinite(settings.left) &&
+      Number.isFinite(settings.top)
+    ) {
       const left = Math.max(
         0,
         Math.min(window.innerWidth - button.offsetWidth, settings.left)
@@ -604,7 +702,10 @@
 
   window.addEventListener("resize", () => {
     restoreButtonPosition();
-    if (panel.classList.contains("open")) positionPanel();
+
+    if (panel.classList.contains("open")) {
+      positionPanel();
+    }
   });
 
   restoreButtonPosition();
