@@ -39,7 +39,7 @@
     const petal = document.createElement("div");
     petal.className = "spring-petal";
 
-    const size = Math.random() * 8 + 9;
+    const size = Math.random() * 4 + 5;
     const duration = Math.random() * 12 + 20;
 
     petal.style.left = Math.random() * 100 + "vw";
